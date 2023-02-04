@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+    client:
+        container_name: client
+        env_file:
+            - ./client/.development.env
+        build:
+            context: ./client
+        volumes:
+            - ./client:/app
+            - /app/node_modules
+        command: yarn run dev
+        ports:
+            - 3000:3000
+        depends_on:
+            - server
+        restart: always
+    server:
+        container_name: server
+        env_file:
+            - ./server/.development.env
+        build:
+            context: ./server
+        volumes:
+            - ./server:/app
+            - /app/node_modules
+        command: nodemon app.js
+        ports:
+            - 8000:8000
+        restart: always
+
