@@ -1,14 +1,15 @@
-FROM node:14-slim
+FROM node:16.13.1-alpine3.14
 
 WORKDIR /app
 
-COPY yarn*.json ./
+COPY package.json ./
+
+COPY yarn.lock ./
 
 RUN yarn install
-RUN yarn global add nodemon
 
 COPY . .
 
 EXPOSE 8000
 
-CMD [ "nodemon", "app.js" ]
+CMD [ "yarn", "run", "dev" ]

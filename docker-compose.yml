@@ -24,8 +24,7 @@ services:
             context: ./server
         volumes:
             - ./server:/app
-            - /app/node_modules
-        command: nodemon app.js
+        command: yarn run dev
         ports:
             - 8000:8000
         restart: always
