@@ -1,7 +1,12 @@
-import express, { Express, Request, Response } from 'express';
+import express, {Express, Request, Response} from 'express';
+import expressWs from "express-ws";
 
-const app: Express = express();
+const {app, getWss, applyTo} = expressWs(express())
 const port = process.env.PORT ?? 8000;
+
+app.ws("/", (ws, req) => {
+    console.log("Connected")
+})
 
 app.get('/', (req: Request, res: Response) => {
     res.send('Express + TypeScript hello!!!');
