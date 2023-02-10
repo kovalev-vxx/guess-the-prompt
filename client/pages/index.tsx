@@ -2,24 +2,39 @@ import Head from 'next/head'
 import Image from 'next/image'
 import {Inter} from '@next/font/google'
 import styles from '@/styles/Home.module.css'
-import {useEffect} from "react";
-import { Button } from '@mui/material';
+import {useEffect, useRef, useState} from "react";
+import {Button} from '@mui/material';
+import socketIOClient from "socket.io-client"
 
 const inter = Inter({subsets: ['latin']})
+const socket = socketIOClient("ws://localhost:8000")
 
+
+type Session = {
+    id: number
+}
 
 export default function Home() {
+    const [sessions, setSessions] = useState<Session[]>([])
 
-    useEffect(()=>{
-        const socket = new WebSocket("ws://localhost:8000/")
-        socket.onopen = () => {
-            console.log("Hello socket")
-        }
+
+    useEffect(() => {
+        socket.on("room-created", (msg) => {
+            console.log(msg)
+        })
+        socket.on("session-error", (msg) => {
+            console.log(msg)
+        })
+        socket.on("session-list", (msg) => {
+            console.log(msg)
+        })
     }, [])
 
     return (
         <>
-            <Button variant="text">Hello btn</Button>
+            <Button variant="text" onClick={() => {
+                socket.emit("create-session")
+            }}>Hello btn</Button>
             <Head>
                 <title>Guess the prompt</title>
                 <meta name="description" content="The game Guess the prompt"/>
