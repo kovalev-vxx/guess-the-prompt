@@ -1,10 +1,10 @@
-export class Player {
-    name:string
-    id:number
+import {Client} from "./Client";
 
-    constructor(name:string, id:number) {
-        this.name = name
-        this.id = id
+export class Player {
+    client: Client
+
+    constructor(client: Client) {
+        this.client = client;
     }
 
 

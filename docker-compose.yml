@@ -26,5 +26,6 @@ services:
         command: yarn run dev
         ports:
             - 8000:8000
+            - 9229:9229
         restart: always
 

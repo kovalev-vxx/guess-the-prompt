@@ -1,40 +1,57 @@
 import Head from 'next/head'
-import Image from 'next/image'
-import {Inter} from '@next/font/google'
-import {useEffect, useRef, useState} from "react";
-import {Button} from '@mui/material';
-import socketIOClient from "socket.io-client"
+import React, {useEffect} from "react";
+import {useAppDispatch, useAppSelector} from "@/hooks/redux";
+import {ISession} from "@/models/ISession";
+import {setSessions} from '@/store/actions/sessionActions';
+import SessionsList from "@/components/SessionsList";
+import UsernameForm from "@/components/UsernameForm";
+import {useRouter} from "next/router";
+import {IUser} from "@/models/IUser";
+import {setUser} from "@/store/actions/userActions";
 import {socket} from "@/pages/_app";
-
-const inter = Inter({subsets: ['latin']})
-
 
 
 type Session = {
     id: number
 }
 
+function generate(element: React.ReactElement) {
+    return [0, 1, 2].map((value) =>
+        React.cloneElement(element, {
+            key: value,
+        }),
+    );
+}
+
 export default function Home() {
-    const [sessions, setSessions] = useState<Session[]>([])
+    const dispatch = useAppDispatch()
+    const router = useRouter()
 
 
     useEffect(() => {
+        socket.emit("session-list")
         socket.on("room-created", (msg) => {
             console.log(msg)
         })
         socket.on("session-error", (msg) => {
-            console.log(msg)
+            console.log(msg, socket.id)
         })
-        socket.on("session-list", (msg) => {
-            console.log(msg)
+        socket.on("session-list", (sessions: ISession[]) => {
+            if (sessions.length) {
+                dispatch(setSessions(sessions))
+            }
         })
-    }, [])
+        socket.on("join-session", (id: number) => {
+            router.push(`/session/${id}`)
+        })
+        socket.on("auth", (user:IUser) => {
+            console.log(user)
+            dispatch(setUser(user))
+        })
+    }, [router, dispatch])
 
     return (
         <>
-            <Button variant="text" onClick={() => {
-                socket.emit("create-session")
-            }}>Hello btn</Button>
             <Head>
                 <title>Guess the prompt</title>
                 <meta name="description" content="The game Guess the prompt"/>
@@ -42,7 +59,8 @@ export default function Home() {
                 <link rel="icon" href="/favicon.ico"/>
             </Head>
             <main>
-
+                <UsernameForm/>
+                <SessionsList/>
             </main>
         </>
     )
