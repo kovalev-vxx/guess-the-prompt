@@ -8,12 +8,31 @@ import socketIOClient from "socket.io-client";
 import {Provider} from 'react-redux';
 import {IUser} from "@/models/IUser";
 import {ISession} from "@/models/ISession";
+import { Roboto } from '@next/font/google'
+const roboto = Roboto({
+    weight: '400',
+    subsets: ['latin'],
+})
 
 const theme = createTheme({
     palette: {
         primary: indigo,
         secondary: pink,
     },
+    typography: {
+        fontFamily: [
+            '-apple-system',
+            'BlinkMacSystemFont',
+            '"Segoe UI"',
+            'Roboto',
+            '"Helvetica Neue"',
+            'Arial',
+            'sans-serif',
+            '"Apple Color Emoji"',
+            '"Segoe UI Emoji"',
+            '"Segoe UI Symbol"',
+        ].join(','),
+    }
 })
 
 interface AppState {
@@ -30,7 +49,7 @@ export default function App({Component, ...rest}: AppProps) {
     return (
             <Provider store={store}>
                 <ThemeProvider theme={theme}>
-                    <Layout>
+                    <Layout className={roboto.className}>
                         <Component {...pageProps} />
                     </Layout>
                 </ThemeProvider>

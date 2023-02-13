@@ -1,10 +1,6 @@
 import express, {Express, Request, Response} from 'express';
 import * as http from "http";
-import {Server} from "socket.io"
 import cors from "cors"
-import {SessionManager} from "./models/SessionManager";
-import {Client} from "./models/Client";
-import {ClientManager} from "./models/ClientManager";
 import {SocketConfig} from "./models/SocketConfig";
 
 

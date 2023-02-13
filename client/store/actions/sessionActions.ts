@@ -7,3 +7,9 @@ export const setSessions = (sessions:ISession[]) => {
         dispatch(sessionsSlice.actions.setSessions(sessions))
     }
 }
+
+export const setCurrentSession = (session:ISession) => {
+    return async (dispatch:AppDispatch) => {
+        dispatch(sessionsSlice.actions.setCurrentSession(session))
+    }
+}

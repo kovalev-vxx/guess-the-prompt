@@ -19,8 +19,15 @@ export class SessionManager {
             return false
         }
         this.sessions.set(id, new Session(id, client))
+        this.update()
         return true
     }
+
+    startSessions():void {
+        this.sessions.forEach(session=>{
+            session.start()
+        })
+}
 
     getSessions() {
         return [...this.sessions.values()]
@@ -36,9 +43,39 @@ export class SessionManager {
         return this.sessions.get(id)
     }
 
-    closeSession(id: number, socket: Socket) {
+    joinSession(id: number, client: Client): Session | undefined {
+        const session: Session | undefined = this.getSession(id)
+        if (session) {
+            session.attachClient(client)
+            this.update()
+            return session
+        }
+    }
+
+
+    leaveSession(id:number, client:Client):boolean {
+        const session: Session | undefined = this.getSession(id)
+        if(session) {
+            session.removeClient(client)
+            this.update()
+            return true
+        }
+        return false
+    }
+
+
+    closeSession(id: number, client:Client):boolean {
         const session = this.sessions.get(id)
-        session && session.close()
-        this.sessions.delete(id)
+        if(session?.owner.id===client.id){
+            session.close()
+            this.sessions.delete(id)
+            this.update()
+            return true
+        }
+        return false
+    }
+
+    update(){
+        this.socketConfig.update("session-list", this.getSessions())
     }
 }

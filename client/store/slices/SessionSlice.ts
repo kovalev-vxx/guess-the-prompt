@@ -1,20 +1,25 @@
 import {createSlice} from "@reduxjs/toolkit"
-import {ISession} from "@/models/ISession";
+import {ISession, ISessionDefaultValues} from "@/models/ISession";
 
 interface SessionState {
     sessions: ISession[]
+    currentSession: ISession
 }
 
 const initialState: SessionState = {
-    sessions: []
+    sessions: [],
+    currentSession: ISessionDefaultValues
 }
 
 export const sessionsSlice = createSlice({
     name: "session",
     initialState,
     reducers: {
-        setSessions: (state,action ) => {
+        setSessions: (state, action) => {
             state.sessions = action.payload
+        },
+        setCurrentSession: (state, action) => {
+            state.currentSession = action.payload
         }
     }
 })

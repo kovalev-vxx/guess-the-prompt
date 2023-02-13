@@ -2,10 +2,12 @@ import {Action, combineReducers, configureStore, ThunkAction} from "@reduxjs/too
 import sessionReducer from "@/store/slices/SessionSlice";
 import userReducer from "./slices/UserSlice";
 import {createWrapper} from "next-redux-wrapper";
+import gameReducer from "@/store/slices/GameSlice";
 
 const rootReducer = combineReducers({
     session: sessionReducer,
-    user: userReducer
+    user: userReducer,
+    game: gameReducer
 })
 
 export const setupStore = () => {

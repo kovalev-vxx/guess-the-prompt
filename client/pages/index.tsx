@@ -1,8 +1,8 @@
 import Head from 'next/head'
 import React, {useEffect} from "react";
 import {useAppDispatch, useAppSelector} from "@/hooks/redux";
-import {ISession} from "@/models/ISession";
-import {setSessions} from '@/store/actions/sessionActions';
+import {ISession, ISessionDefaultValues} from "@/models/ISession";
+import {setCurrentSession, setSessions} from '@/store/actions/sessionActions';
 import SessionsList from "@/components/SessionsList";
 import UsernameForm from "@/components/UsernameForm";
 import {useRouter} from "next/router";
@@ -28,6 +28,7 @@ export default function Home() {
     const router = useRouter()
 
 
+
     useEffect(() => {
         socket.emit("session-list")
         socket.on("room-created", (msg) => {
@@ -37,16 +38,19 @@ export default function Home() {
             console.log(msg, socket.id)
         })
         socket.on("session-list", (sessions: ISession[]) => {
-            if (sessions.length) {
-                dispatch(setSessions(sessions))
-            }
+            dispatch(setSessions(sessions))
         })
-        socket.on("join-session", (id: number) => {
-            router.push(`/session/${id}`)
+        socket.on("join-session", (session:ISession) => {
+            dispatch(setCurrentSession(session))
+            router.push(`/session/${session.id}`)
         })
         socket.on("auth", (user:IUser) => {
             console.log(user)
             dispatch(setUser(user))
+        })
+        socket.on("leave-session", ()=> {
+            dispatch(setCurrentSession(ISessionDefaultValues))
+            router.push("/")
         })
     }, [router, dispatch])
 
