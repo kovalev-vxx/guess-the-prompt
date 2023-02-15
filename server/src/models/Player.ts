@@ -11,7 +11,8 @@ export class Player {
         this.client = client;
     }
 
-
-
+    toJSON(){
+        return {...this.client.toJSON()}
+    }
 
 }

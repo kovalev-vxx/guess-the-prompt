@@ -9,6 +9,7 @@ import {Provider} from 'react-redux';
 import {IUser} from "@/models/IUser";
 import {ISession} from "@/models/ISession";
 import { Roboto } from '@next/font/google'
+import {useSocket} from "@/hooks/useSocket";
 const roboto = Roboto({
     weight: '400',
     subsets: ['latin'],

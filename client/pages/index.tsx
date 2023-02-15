@@ -11,48 +11,34 @@ import {setUser} from "@/store/actions/userActions";
 import {socket} from "@/pages/_app";
 
 
-type Session = {
-    id: number
-}
-
-function generate(element: React.ReactElement) {
-    return [0, 1, 2].map((value) =>
-        React.cloneElement(element, {
-            key: value,
-        }),
-    );
-}
-
 export default function Home() {
-    const dispatch = useAppDispatch()
-    const router = useRouter()
-
-
-
-    useEffect(() => {
-        socket.emit("session-list")
-        socket.on("room-created", (msg) => {
-            console.log(msg)
-        })
-        socket.on("session-error", (msg) => {
-            console.log(msg, socket.id)
-        })
-        socket.on("session-list", (sessions: ISession[]) => {
-            dispatch(setSessions(sessions))
-        })
-        socket.on("join-session", (session:ISession) => {
-            dispatch(setCurrentSession(session))
-            router.push(`/session/${session.id}`)
-        })
-        socket.on("auth", (user:IUser) => {
-            console.log(user)
-            dispatch(setUser(user))
-        })
-        socket.on("leave-session", ()=> {
-            dispatch(setCurrentSession(ISessionDefaultValues))
-            router.push("/")
-        })
-    }, [router, dispatch])
+    // const dispatch = useAppDispatch()
+    // const router = useRouter()
+    //
+    // useEffect(() => {
+    //     socket.emit("session-list")
+    //     socket.on("room-created", (msg) => {
+    //         console.log(msg)
+    //     })
+    //     socket.on("session-error", (msg) => {
+    //         console.log(msg, socket.id)
+    //     })
+    //     socket.on("session-list", (sessions: ISession[]) => {
+    //         dispatch(setSessions(sessions))
+    //     })
+    //     socket.on("join-session", (session:ISession) => {
+    //         dispatch(setCurrentSession(session))
+    //         router.push(`/session/${session.id}`)
+    //     })
+    //     socket.on("auth", (user:IUser) => {
+    //         console.log(user)
+    //         dispatch(setUser(user))
+    //     })
+    //     socket.on("leave-session", ()=> {
+    //         dispatch(setCurrentSession(ISessionDefaultValues))
+    //         router.push("/")
+    //     })
+    // }, [router, dispatch])
 
     return (
         <>

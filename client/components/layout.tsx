@@ -1,6 +1,8 @@
 import React, {FC} from 'react';
 import Header from "@/components/Header";
 import {Box, Container} from "@mui/material";
+import {useSocket} from "@/hooks/useSocket";
+import {socket} from "@/pages/_app";
 
 type LayoutProps = {
     children: React.ReactNode,
@@ -8,6 +10,8 @@ type LayoutProps = {
 }
 
 const Layout: FC<LayoutProps> = ({children, className}) => {
+    useSocket(socket)
+
     return (
         <div className={`content ${className}`}>
             <Header/>

@@ -7,6 +7,15 @@ import {Http2SecureServer} from "http2";
 import {Client} from "./Client";
 import {Session} from "./Session";
 
+interface PromptMessage {
+    prompt: string
+    id: number
+}
+
+interface GuessMessage {
+    guess: string
+    id: number
+}
 
 
 export class SocketConfig {
@@ -26,6 +35,7 @@ export class SocketConfig {
     }
 
     handler(socket:Socket){
+        const client: Client | undefined = this.clientManager.getClient(socket.id)
         const auth = ({username}:Client) => {
             const client:Client = this.clientManager.addClient(username, socket)
             socket.emit("session-list", this.sessionManager.getSessions())
@@ -86,13 +96,43 @@ export class SocketConfig {
             }
         }
 
-        socket.on("auth", auth)
-        socket.on("create-session", createSession)
+        const startGame = ({id}:Session) => {
+            const client: Client | undefined = this.clientManager.getClient(socket.id)
+            const session: Session | undefined = this.sessionManager.getSession(id)
+            if(client && session && session.owner.id === client.id){
+                session.startGame()
+            }
+        }
+
+        const setPrompt = ({id, prompt}:PromptMessage) => {
+            // const client: Client | undefined = this.clientManager.getClient(socket.id)
+            const session: Session | undefined = this.sessionManager.getSession(id)
+            if(client && session && session.owner.id === client.id){
+                session.setPrompt(prompt)
+            }
+        }
+
+        const makeGuess = ({id, guess}:GuessMessage) => {
+            const client: Client | undefined = this.clientManager.getClient(socket.id)
+            const session: Session | undefined = this.sessionManager.getSession(id)
+            if(client && session && session.owner.id !== client.id){
+                session.addGuess(client, guess)
+            }
+        }
+
+
+
         socket.on("close-session", closeSession)
         socket.on("join-session", joinSession)
         socket.on("leave-session", leaveSession)
         socket.on("client-ready", clientReady)
         socket.on("client-not-ready", clientNotReady)
+        socket.on("start-game", startGame)
+        socket.on("prompt", setPrompt)
+        socket.on("makeGuess", makeGuess)
+
+        socket.on("create-session", createSession)
+        socket.on("auth", auth)
     }
 
 
@@ -108,7 +148,7 @@ export class SocketConfig {
         this.io.on("connection", (socket) => {
             setInterval(()=>{
                 this.sessionManager.startSessions()
-            }, 10000)
+            }, 1000)
             console.log("user is connected")
             this.handler(socket)
 

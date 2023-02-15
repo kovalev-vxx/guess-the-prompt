@@ -12,15 +12,7 @@ export class Client {
         this.id = socket.id
         this.username = username
         this.socket = socket
-        this.socketHandler()
         this.is_ready = false
-    }
-
-
-    socketHandler(): void {
-        // this.socket.on("session-list", () => {
-        //     this.socket.emit("session-list", this.clientManager..sessionManager.getSessions())
-        // })
     }
 
     joinToSession(session: Session) {

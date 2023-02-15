@@ -12,43 +12,42 @@ const Sessions = () => {
     const router = useRouter()
     const {id} = router.query
     const {currentSession, sessions} = useAppSelector(state => state.session)
+    const {game} = useAppSelector(state => state.game)
     const dispatch = useAppDispatch()
 
-    useEffect(()=>{
-        const foundSession = sessions.find(session=>String(session.id)===id)
-        if(foundSession){
+    useEffect(() => {
+        const foundSession = sessions.find(session => String(session.id) === id)
+        if (foundSession) {
             dispatch(setCurrentSession(foundSession))
         }
     }, [sessions, dispatch, id])
 
-
-    useEffect(()=>{
-        socket.on("game", (game:IGame)=>{
-            dispatch(updateGame(game))
-        })
-    }, [dispatch])
-
     const {user} = useAppSelector(state => state.user)
     const [ready, setReady] = useState<boolean>(false)
-    const isOwner = useMemo(()=>{
+
+    const r: boolean = useMemo(() => {
+        return !!game.players.find(user => user.id === user.id)
+    }, [game])
+
+    const isOwner = useMemo(() => {
         return user.id === currentSession.owner.id
     }, [user, currentSession])
-    const startIsActive = useMemo(()=>{
-        return currentSession.clients.length >= 2
-    }, [currentSession])
+
 
     const leave = () => {
         socket.emit("leave-session", currentSession)
     }
 
     const readyButton = () => {
-        if(ready){
+        if (ready) {
             socket.emit("client-not-ready", currentSession)
-            setReady(false)
         } else {
             socket.emit("client-ready", currentSession)
-            setReady(true)
         }
+    }
+
+    const startGame = () => {
+        socket.emit("start-game", currentSession)
     }
 
 
@@ -57,8 +56,9 @@ const Sessions = () => {
             <Container sx={{display: "flex", justifyContent: "space-between"}}>
                 <Button onClick={leave}>Выйти</Button>
                 <Box sx={{display: "flex", gap: "1rem"}}>
-                    <Button variant={ready ? "outlined" : "contained"} onClick={readyButton}>{ready ? "Не готов" : "Готов"}</Button>
-                    {isOwner && <Button variant="contained" disabled={!startIsActive}>Начать</Button>}
+                    <Button variant={r ? "outlined" : "contained"}
+                            onClick={readyButton}>{r ? "Не готов" : "Готов"}</Button>
+                    {isOwner && <Button onClick={startGame} variant="contained" disabled={!game.canStart}>Начать</Button>}
                 </Box>
             </Container>
 

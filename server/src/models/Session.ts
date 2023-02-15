@@ -1,8 +1,16 @@
-import {Game} from "./Game";
+import {Game, STATE} from "./Game";
 import {Application} from "express-ws";
 import {Socket} from "socket.io"
 import {Client} from "./Client";
 import {Player} from "./Player";
+
+// interface IObservableGameFields {
+//     state:STATE
+//     playersCount:number
+//     canStart:boolean,
+//     currentRound:number,
+//     started:boolean
+// }
 
 export class Session {
     id: number;
@@ -12,7 +20,8 @@ export class Session {
 
     created_at:number
     game:Game
-
+    lastGameState:STATE
+    gameJSON: string
 
     constructor(id: number, owner:Client) {
         this.id = id
@@ -21,12 +30,28 @@ export class Session {
         this.clients = new Map([]);
         this.created_at = Date.now()
         this.game = new Game(this)
+        this.lastGameState = this.game.state
+        this.gameJSON = JSON.stringify(this.game)
     }
 
-    start() {
+    upGame() {
         this.game.update()
     }
 
+    startGame(){
+        this.game.started = true
+        this.game.players.forEach(player=>{
+            player.client.socket.emit("game-started", this)
+        })
+    }
+
+    setPrompt(prompt:string){
+        this.game.prompt = prompt
+    }
+
+    addGuess(client:Client, guess:string){
+
+    }
 
     close() {
         console.log(`session ${this.id} closed`)
@@ -46,16 +71,21 @@ export class Session {
 
     clientIsReady(client:Client){
         client.ready()
-        const player = new Player(client)
-        this.game.addPlayer(player)
+        this.game.addPlayer(client)
     }
 
     clientNotReady(client:Client){
         client.notReady()
-        const player = this.game.players.get(client.id)
-        if(player){
-            this.game.removePlayer(player)
+        this.game.removePlayer(client)
+    }
+
+    observeGame(game:Game){
+        if(this.gameJSON !== JSON.stringify(game)){
+            this.game.players.forEach(player=>{
+                player.client.socket.emit("game", game)
+            })
         }
+        this.gameJSON = JSON.stringify(game)
     }
 
     toJSON() {

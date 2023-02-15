@@ -25,7 +25,7 @@ export class SessionManager {
 
     startSessions():void {
         this.sessions.forEach(session=>{
-            session.start()
+            session.upGame()
         })
 }
 
