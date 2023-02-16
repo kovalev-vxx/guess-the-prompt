@@ -1,5 +1,4 @@
 import {Player} from "./Player";
-import {Socket} from "socket.io";
 import {Client} from "./Client";
 import {Session} from "./Session";
 
@@ -13,7 +12,7 @@ export enum STATE {
 
     WAITING_GUESSES = "WAITING_GUESSES",
 
-    WAITING_RESULT = "WAITING_GUESSES",
+    WAITING_RESULT = "WAITING_RESULT",
     ENDING = "ENDING",
 
 }
@@ -32,7 +31,6 @@ export class Game {
     guesses: Map<string, string> // client_id:result
     results: Map<string, string> // client_id:result
     leader_queue: Player[]
-    leader_number: number
 
 
     constructor(session: Session) {
@@ -43,35 +41,43 @@ export class Game {
         this.maxRounds = 3
         this.currentRound = 1
         this.started = false
-        this.players.set(this.session.owner.id, new Player(this.session.owner))
-        this.leader_queue = [...this.players.values()]
-        this.leader_number = 0
-        this.leader = this.leader_queue[this.leader_number]
+        this.leader = new Player(this.session.owner)
+        this.players.set(this.session.owner.id, this.leader)
+        this.leader_queue = []
         this.prompt = ""
         this.results = new Map([])
         this.guesses = new Map([])
     }
 
     addGuess(client: Client, guess: string): boolean {
-        if (client.id !== this.leader.client.id) {
-            this.guesses.set(client.id, guess)
-            return true
+        if(this.state === STATE.WAITING_GUESSES){
+            if (client.id !== this.leader.client.id) {
+                this.guesses.set(client.id, guess)
+                return true
+            }
         }
         return false
     }
 
     setPrompt(client: Client, prompt: string): boolean {
-        if (client.id === this.leader.client.id) {
-            this.prompt = prompt
-            return true
+        if(this.state === STATE.WAITING_PROMPT){
+            if (client.id === this.leader.client.id) {
+                this.prompt = prompt
+                return true
+            }
         }
         return false
     }
 
 
     addPlayer(client: Client) {
-        const player = new Player(client)
-        this.players.set(player.client.id, player)
+        if(this.state === STATE.WAITING || this.state === STATE.CAN_START){
+            if(client.id!==this.leader.client.id){
+                const player = new Player(client)
+                this.players.set(player.client.id, player)
+                this.leader_queue.push(player)
+            }
+        }
     }
 
     removePlayer(client: Client) {
@@ -85,13 +91,31 @@ export class Game {
         }
     }
 
-    newRound() {
-        this.leader_number += 1
-        this.leader = this.leader_queue[this.leader_number]
-        this.currentRound += 1
+
+    newLoop() {
         this.prompt = ""
         this.results = new Map([])
         this.guesses = new Map([])
+        const leader_candidate = this.leader_queue.shift()
+        if(leader_candidate){
+            this.leader = leader_candidate
+        } else {
+            this.newRound()
+        }
+    }
+    
+    newRound(){
+        this.currentRound += 1
+        if(this.currentRound>this.maxRounds){
+            console.log("FINISH")
+            this.session.finishGame()
+        } else {
+            this.leader_queue = [...this.players.values()]
+            const leader_candidate = this.leader_queue.shift()
+            if(leader_candidate){
+                this.leader = leader_candidate
+            }
+        }
     }
 
     update() {
@@ -113,28 +137,27 @@ export class Game {
                 break
             }
             case STATE.WAITING_PROMPT: {
-                if (this.prompt.length) {
+                if (this.prompt.length !== 0) {
                     this.state = STATE.WAITING_GUESSES
                 }
                 break
             }
             case STATE.WAITING_GUESSES: {
-                if (this.guesses.size === this.players.size) {
+                if (this.guesses.size === (this.players.size - 1)) {
+                    this.newLoop()
                     this.state = STATE.WAITING_RESULT
                 }
                 break
             }
             case STATE.WAITING_RESULT: {
-                if (this.results.size && this.maxRounds !== this.currentRound) {
-                    this.newRound()
-                    this.state = STATE.WAITING_PROMPT
-                } else {
-                    this.state = STATE.ENDING
-                }
+                this.state = STATE.WAITING_PROMPT
                 break
             }
+            case STATE.ENDING: {
+                this.session.finishGame()
+            }
         }
-        this.session.observeGame(this)
+        this.session.observeGame()
     }
 
     toJSON() {

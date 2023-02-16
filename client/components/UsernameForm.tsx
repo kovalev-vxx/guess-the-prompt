@@ -38,21 +38,20 @@ const UsernameForm = () => {
 
     return (
         <Container maxWidth="sm" sx={{display: "flex", flexDirection: "column", alignItems: "center", gap: "1rem"}}>
-            {user.username ?
-                <>
-                    <Typography variant="h5" component="span">Добро пожаловать, {user.username}</Typography>
-                    <Button fullWidth={false} onClick={createRoom} variant="contained">Создать сессию</Button>
-                </>
-                :
-                <>
-                    <TextField sx={{marginY: "auto"}} error={error} helperText={helperText} fullWidth
-                               onChange={usernameOnChange} id="outlined-basic" label="Your username"
-                               variant="outlined"/>
-                    <Button fullWidth={false} onClick={auth} variant="contained">Войти</Button>
-                </>
-            }
-
-
+            <Button fullWidth={false} onClick={createRoom} variant="contained">Создать сессию</Button>
+            {/*{user.username ?*/}
+            {/*    <>*/}
+            {/*        <Typography variant="h5" component="span">Добро пожаловать, {user.username}</Typography>*/}
+            {/*        <Button fullWidth={false} onClick={createRoom} variant="contained">Создать сессию</Button>*/}
+            {/*    </>*/}
+            {/*    :*/}
+            {/*    <>*/}
+            {/*        <TextField sx={{marginY: "auto"}} error={error} helperText={helperText} fullWidth*/}
+            {/*                   onChange={usernameOnChange} id="outlined-basic" label="Your username"*/}
+            {/*                   variant="outlined"/>*/}
+            {/*        <Button fullWidth={false} onClick={auth} variant="contained">Войти</Button>*/}
+            {/*    </>*/}
+            {/*}*/}
         </Container>
     );
 };

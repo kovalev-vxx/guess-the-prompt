@@ -1,91 +1,102 @@
 import {Game, STATE} from "./Game";
-import {Application} from "express-ws";
 import {Socket} from "socket.io"
 import {Client} from "./Client";
-import {Player} from "./Player";
+import axios from "axios"
 
-// interface IObservableGameFields {
-//     state:STATE
-//     playersCount:number
-//     canStart:boolean,
-//     currentRound:number,
-//     started:boolean
-// }
 
 export class Session {
-    id: number;
-    // ws:WebSocket
+    id: string;
     owner: Client
     clients: Map<string, Client>
 
-    created_at:number
-    game:Game
-    lastGameState:STATE
+    created_at: number
+    game: Game
+    lastGameState: STATE
     gameJSON: string
 
-    constructor(id: number, owner:Client) {
+    constructor(id: string, socket: Socket) {
         this.id = id
-        this.owner = owner
-        this.owner.socket.emit("room-created", {id: this.id})
+        this.owner = new Client(socket, this)
         this.clients = new Map([]);
+        this.clients.set(socket.id, this.owner)
         this.created_at = Date.now()
         this.game = new Game(this)
         this.lastGameState = this.game.state
         this.gameJSON = JSON.stringify(this.game)
+        this.owner.isReady()
     }
 
-    upGame() {
+    gameLoop() {
         this.game.update()
     }
 
-    startGame(){
+    startGame() {
         this.game.started = true
-        this.game.players.forEach(player=>{
+        this.game.players.forEach(player => {
             player.client.socket.emit("game-started", this)
         })
     }
 
-    setPrompt(prompt:string){
-        this.game.prompt = prompt
+    finishGame() {
+        this.game.players.forEach(player => {
+            player.client.socket.emit("game-finished", this)
+        })
     }
 
-    addGuess(client:Client, guess:string){
+    setPrompt(client: Client, prompt: string) {
+        axios.get("http://d8d9-35-190-175-40.ngrok.io/image/"+prompt, {responseType: 'arraybuffer'}).then(image => {
+            this.game.players.forEach(player => {
+                player.client.socket.emit("image", Buffer.from(image.data).toString('base64'))
+            })
+            this.game.setPrompt(client,prompt)
+        })
+    }
 
+    addGuess(client: Client, guess: string) {
+        this.game.addGuess(client, guess)
     }
 
     close() {
         console.log(`session ${this.id} closed`)
     }
 
-    attachClient(client: Client) {
-        this.clients.set(client.id, client)
+    addClient(socket: Socket): boolean {
+        if (socket.id !== this.owner.socket.id || !this.game.started) {
+            this.clients.set(socket.id, new Client(socket, this))
+            return true
+        }
+        return false
     }
 
-    removeClient(client:Client) {
-        this.clients.delete(client.id)
+
+    deleteClient(socket: Socket) {
+        this.clients.delete(socket.id)
     }
 
-    getClientsAsArray():Client[] {
+    getClientsAsArray(): Client[] {
         return [...this.clients.values()]
     }
 
-    clientIsReady(client:Client){
-        client.ready()
+    clientIsReady(client: Client) {
         this.game.addPlayer(client)
     }
 
-    clientNotReady(client:Client){
-        client.notReady()
+    clientNotReady(client: Client) {
         this.game.removePlayer(client)
     }
 
-    observeGame(game:Game){
-        if(this.gameJSON !== JSON.stringify(game)){
-            this.game.players.forEach(player=>{
-                player.client.socket.emit("game", game)
-            })
+    broadcastGame() {
+        this.game.players.forEach(player => {
+            player.client.socket.emit("game", this.game)
+        })
+    }
+
+    observeGame() {
+        if (this.gameJSON !== JSON.stringify(this.game)) {
+            console.log(this.game.state, this.game.prompt, this.game.guesses.size, this.game.leader.client.id, this.game.leader_queue.length)
+            this.broadcastGame()
         }
-        this.gameJSON = JSON.stringify(game)
+        this.gameJSON = JSON.stringify(this.game)
     }
 
     toJSON() {

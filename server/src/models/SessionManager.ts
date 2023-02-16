@@ -5,7 +5,7 @@ import {Client} from "./Client";
 
 
 export class SessionManager {
-    sessions: Map<number, Session>
+    sessions: Map<string, Session> // socket_id:Session
     socketConfig: SocketConfig
 
 
@@ -14,18 +14,16 @@ export class SessionManager {
         this.socketConfig = socketConfig
     }
 
-    createSession(id: number, client: Client): boolean {
-        if (this.getSessionByOwner(client)) {
-            return false
-        }
-        this.sessions.set(id, new Session(id, client))
+    createSession(socket:Socket): Session {
+        const session = new Session(socket.id, socket)
+        this.sessions.set(socket.id, session)
         this.update()
-        return true
+        return session
     }
 
     startSessions():void {
         this.sessions.forEach(session=>{
-            session.upGame()
+            session.gameLoop()
         })
 }
 
@@ -39,24 +37,27 @@ export class SessionManager {
         })
     }
 
-    getSession(id: number): Session | undefined {
+    getSession(id: string): Session | undefined {
         return this.sessions.get(id)
     }
 
-    joinSession(id: number, client: Client): Session | undefined {
+    joinSession(id: string, socket:Socket): Session | undefined {
         const session: Session | undefined = this.getSession(id)
         if (session) {
-            session.attachClient(client)
+            session.addClient(socket)
             this.update()
             return session
         }
     }
 
 
-    leaveSession(id:number, client:Client):boolean {
+    leaveSession(id:string, socket:Socket):boolean {
         const session: Session | undefined = this.getSession(id)
         if(session) {
-            session.removeClient(client)
+            session.deleteClient(socket)
+            if(session.owner.id===socket.id){
+                this.closeSession(session.id, socket)
+            }
             this.update()
             return true
         }
@@ -64,18 +65,20 @@ export class SessionManager {
     }
 
 
-    closeSession(id: number, client:Client):boolean {
+    closeSession(id: string, socket:Socket):boolean {
         const session = this.sessions.get(id)
-        if(session?.owner.id===client.id){
-            session.close()
-            this.sessions.delete(id)
-            this.update()
-            return true
+        if(session){
+            if(session.owner.socket.id===socket.id){
+                session.close()
+                this.sessions.delete(id)
+                this.update()
+                return true
+            }
         }
         return false
     }
 
     update(){
-        this.socketConfig.update("session-list", this.getSessions())
+        this.socketConfig.updateSession()
     }
 }

@@ -5,8 +5,6 @@ import {useAppDispatch, useAppSelector} from "@/hooks/redux";
 import {socket} from "@/pages/_app";
 import PlayersList from "@/components/PlayersList";
 import {setCurrentSession} from "@/store/actions/sessionActions";
-import {IGame} from "@/models/IGame";
-import {updateGame} from "@/store/actions/gameActions";
 
 const Sessions = () => {
     const router = useRouter()
@@ -61,6 +59,7 @@ const Sessions = () => {
                     {isOwner && <Button onClick={startGame} variant="contained" disabled={!game.canStart}>Начать</Button>}
                 </Box>
             </Container>
+            <Button onClick={()=>{socket.emit("TEST", "12323")}}>TEST</Button>
 
             <h1>Лобби</h1>
             <h2>Игроки в лобби</h2>
