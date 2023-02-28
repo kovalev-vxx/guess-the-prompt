@@ -1,16 +1,31 @@
-import express, { Express, Request, Response } from 'express';
-import expressWs from "express-ws";
-const {app, getWss, applyTo } =expressWs(express())
+import express, {Express, Request, Response} from 'express';
+import * as http from "http";
+import cors from "cors"
+import {SocketConfig} from "./models/SocketConfig";
+
+
+const app: Express = express();
 const port = process.env.PORT ?? 8000;
 
-app.ws("/", (ws,req) => {
-    console.log("Connected")
-})
+app.use(express.json())
+
+app.use(cors({
+    origin:"*"
+}))
+
+const server = http.createServer(app)
+const socketConfig = new SocketConfig(server)
+socketConfig.listen()
 
 app.get('/', (req: Request, res: Response) => {
-    res.send('Express + TypeScript hello!!!');
+    res.send('Express + TypeScript Server');
 });
 
-app.listen(port, () => {
+// app.get('/sessions', (req: Request, res: Response) => {
+//     res.send(sessionManager.getSessions());
+// });
+
+
+server.listen(port, () => {
     console.log(`⚡️[server]: Server is running at http://localhost:${port}`);
 });
