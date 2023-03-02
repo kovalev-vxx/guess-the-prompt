@@ -4,11 +4,12 @@ services:
     client:
         container_name: client
         env_file:
-            - ./client/.development.env
+            - .development.env
         build:
             context: ./client
         volumes:
             - ./client:/app
+            - /app/node_modules
         command: yarn run dev
         ports:
             - 3000:3000
@@ -18,11 +19,12 @@ services:
     server:
         container_name: server
         env_file:
-            - ./server/.development.env
+            - .development.env
         build:
             context: ./server
         volumes:
             - ./server:/app
+            - /app/node_modules
         command: yarn run dev
         ports:
             - 8000:8000

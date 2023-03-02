@@ -44,7 +44,8 @@ export class Session {
     }
 
     setPrompt(client: Client, prompt: string) {
-        axios.get("http://d8d9-35-190-175-40.ngrok.io/image/"+prompt, {responseType: 'arraybuffer'}).then(image => {
+        const ai_image_link = `${process.env.AI_SERVICE_LINK}/image/${prompt}`
+        axios.get(ai_image_link, {responseType: 'arraybuffer'}).then(image => {
             this.game.players.forEach(player => {
                 player.client.socket.emit("image", Buffer.from(image.data).toString('base64'))
             })
